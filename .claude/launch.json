@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:JAVA_HOME='C:\\Program Files\\Microsoft\\jdk-17.0.20.101-hotspot'; $env:Path=\"$env:JAVA_HOME\\bin;$env:USERPROFILE\\tools\\apache-maven-3.9.9\\bin;$env:Path\"; Set-Location backend; mvn -B spring-boot:run"],
+      "port": 8080
+    }
+  ]
+}

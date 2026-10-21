@@ -1,0 +1,157 @@
+:root {
+    --cor-primaria: #1f4e8c;
+    --cor-primaria-escura: #163a69;
+    --cor-perigo: #b42318;
+    --cor-sucesso: #067647;
+    --cor-texto: #1d2433;
+    --cor-suave: #5b6475;
+    --cor-borda: #d6dbe4;
+    --cor-fundo: #f4f6fa;
+    --cor-cartao: #ffffff;
+    --raio: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--cor-texto);
+    background: var(--cor-fundo);
+    line-height: 1.5;
+}
+
+header {
+    background: var(--cor-primaria);
+    color: #fff;
+}
+
+header .conteudo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+header a.marca {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.15rem;
+    text-decoration: none;
+}
+
+nav a {
+    color: #dce6f5;
+    text-decoration: none;
+    margin-left: 18px;
+    font-weight: 500;
+}
+
+nav a:hover, nav a.ativo { color: #fff; text-decoration: underline; }
+
+.conteudo {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.subtitulo { margin: 0 0 24px; color: var(--cor-suave); }
+
+.cartao {
+    background: var(--cor-cartao);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.cartao h2 { margin: 0 0 16px; font-size: 1.15rem; }
+
+.grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px 18px;
+}
+
+.campo { display: flex; flex-direction: column; }
+.campo.largo { grid-column: 1 / -1; }
+
+label { font-size: .875rem; font-weight: 600; margin-bottom: 4px; }
+
+input, select {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background: #fff;
+}
+
+input:focus, select:focus {
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: -1px;
+}
+
+.campo.invalido input, .campo.invalido select { border-color: var(--cor-perigo); }
+.erro-campo { color: var(--cor-perigo); font-size: .8rem; min-height: 1em; margin-top: 2px; }
+.dica { color: var(--cor-suave); font-size: .8rem; margin-top: 2px; }
+
+.acoes { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+button {
+    font: inherit;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.btn-primario { background: var(--cor-primaria); color: #fff; }
+.btn-primario:hover { background: var(--cor-primaria-escura); }
+.btn-secundario { background: #fff; color: var(--cor-texto); border-color: var(--cor-borda); }
+.btn-secundario:hover { background: var(--cor-fundo); }
+.btn-perigo { background: #fff; color: var(--cor-perigo); border-color: #f1c4c0; }
+.btn-perigo:hover { background: #fef3f2; }
+.btn-pequeno { padding: 4px 10px; font-size: .85rem; }
+
+.tabela-container { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; }
+th { color: var(--cor-suave); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+td.acoes-linha { display: flex; gap: 6px; }
+.vazio { color: var(--cor-suave); text-align: center; padding: 24px; }
+
+.mensagem {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.mensagem.sucesso { display: block; background: #ecfdf3; color: var(--cor-sucesso); border: 1px solid #abefc6; }
+.mensagem.erro { display: block; background: #fef3f2; color: var(--cor-perigo); border: 1px solid #fecdca; }
+
+.cards-inicio {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.cards-inicio a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .15s;
+}
+
+.cards-inicio a:hover { border-color: var(--cor-primaria); }
+.cards-inicio p { color: var(--cor-suave); margin: 0; }
+
+@media (max-width: 600px) {
+    nav a { margin-left: 0; margin-right: 14px; }
+}
