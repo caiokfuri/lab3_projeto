@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 
-/** Saldo e transações do aluno/professor logado. */
 export default function useExtrato() {
   const [extrato, setExtrato] = useState(null);
   const [erro, setErro] = useState(null);

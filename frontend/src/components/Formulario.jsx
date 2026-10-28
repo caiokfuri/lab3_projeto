@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-/** Estado de um formulário controlado + erros por campo vindos da API. */
 export function useFormulario(inicial) {
   const [valores, setValores] = useState(inicial);
   const [erros, setErros] = useState({});
@@ -14,7 +13,6 @@ export function useFormulario(inicial) {
   return { valores, setValores, erros, setErros, alterar };
 }
 
-/** Mensagem de sucesso/erro no topo da página, que some sozinha. */
 export function useMensagem() {
   const [mensagem, setMensagem] = useState(null);
   const timer = useRef();

@@ -7,10 +7,6 @@ const VAZIO = {
   nome: '', email: '', cpf: '', rg: '', endereco: '', instituicaoId: '', curso: '', login: '', senha: '',
 };
 
-/**
- * Formulário de aluno usado no auto-cadastro e na edição do perfil.
- * `aoSalvar(dados)` faz a chamada à API; erros de validação voltam marcados nos campos.
- */
 export default function AlunoForm({ inicial, textoBotao, aoSalvar, aoErro, children }) {
   const edicao = Boolean(inicial);
   const { valores, setValores, erros, setErros, alterar } = useFormulario(VAZIO);

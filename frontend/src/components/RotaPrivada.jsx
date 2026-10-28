@@ -3,7 +3,6 @@ import { useAuth } from '../auth/AuthContext';
 import { PAGINA_INICIAL } from '../formatar';
 import Layout from './Layout';
 
-/** Exige login e, opcionalmente, um perfil específico; senão redireciona. */
 export default function RotaPrivada({ perfil }) {
   const { usuario, carregando } = useAuth();
   const local = useLocation();

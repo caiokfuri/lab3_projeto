@@ -5,7 +5,6 @@ import { Campo, useFormulario } from './Formulario';
 
 const VAZIO = { nome: '', email: '', cnpj: '', login: '', senha: '' };
 
-/** Formulário de empresa parceira usado no auto-cadastro e na edição do perfil. */
 export default function EmpresaForm({ inicial, textoBotao, aoSalvar, aoErro, children }) {
   const edicao = Boolean(inicial);
   const { valores, setValores, erros, setErros, alterar } = useFormulario(VAZIO);
