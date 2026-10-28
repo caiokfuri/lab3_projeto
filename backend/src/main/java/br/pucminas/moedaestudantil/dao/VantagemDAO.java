@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface VantagemDAO extends JpaRepository<Vantagem, Long> {
 
-    List<Vantagem> findByEmpresaId(Long empresaId);
+    List<Vantagem> findAllByOrderByCustoMoedasAsc();
+
+    List<Vantagem> findByEmpresaIdOrderByNomeAsc(Long empresaId);
 }

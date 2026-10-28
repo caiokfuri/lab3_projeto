@@ -9,6 +9,8 @@ public interface AlunoDAO extends JpaRepository<Aluno, Long> {
 
     List<Aluno> findAllByOrderByNomeAsc();
 
+    List<Aluno> findByInstituicaoIdOrderByNomeAsc(Long instituicaoId);
+
     boolean existsByCpf(String cpf);
 
     boolean existsByCpfAndIdNot(String cpf, Long id);

@@ -1,5 +1,8 @@
 # Modelo ER e Estratégia de Persistência
 
+> Atualizado no Lab03S03: colunas `vantagem.nome` e `professor.ultimo_semestre_creditado`
+> (ver [Arquitetura.md](Arquitetura.md) para o histórico de mudanças dos modelos).
+
 ## Modelo Entidade-Relacionamento
 
 ```mermaid
@@ -41,6 +44,7 @@ erDiagram
         varchar cpf UK
         varchar departamento
         int saldo_moedas
+        varchar ultimo_semestre_creditado "ex.: 2026/2"
         bigint instituicao_id FK
     }
     EMPRESA_PARCEIRA {
@@ -50,8 +54,9 @@ erDiagram
     }
     VANTAGEM {
         bigint id PK
+        varchar nome
         varchar descricao
-        varchar foto_url
+        varchar foto_url "/uploads/<arquivo>"
         int custo_moedas
         bigint empresa_id FK
     }
@@ -86,7 +91,7 @@ erDiagram
 O sistema segue a arquitetura em camadas do [diagrama de componentes](Componentes.pdf):
 
 ```
-View (HTML/JS)  --HTTP/JSON-->  Controller  -->  Service  -->  DAO  -->  ORM (JPA/Hibernate)  -->  Banco
+View (React)  --HTTP/JSON-->  Controller  -->  Service  -->  DAO  -->  ORM (JPA/Hibernate)  -->  Banco
 ```
 
 - **ORM: JPA com Hibernate** (via Spring Data JPA). As classes de `model` são entidades anotadas

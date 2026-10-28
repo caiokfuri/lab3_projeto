@@ -1,6 +1,8 @@
 package br.pucminas.moedaestudantil.model;
 
+import br.pucminas.moedaestudantil.exception.RegraNegocioException;
 import jakarta.persistence.*;
+import org.springframework.http.HttpStatus;
 
 @Entity
 @Table(name = "aluno")
@@ -33,6 +35,26 @@ public class Aluno extends Usuario {
         this.saldoMoedas += valor;
     }
 
+    /** Troca moedas por uma vantagem: debita o custo e gera o resgate com seu cupom. */
+    public Cupom resgatarVantagem(Vantagem vantagem) {
+        int custo = vantagem.getCustoMoedas();
+        if (custo > saldoMoedas) {
+            throw new RegraNegocioException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Saldo insuficiente: a vantagem custa " + custo + " moedas e você possui " + saldoMoedas);
+        }
+        this.saldoMoedas -= custo;
+
+        TransacaoResgate resgate = new TransacaoResgate();
+        resgate.setAluno(this);
+        resgate.setVantagem(vantagem);
+        resgate.setValor(custo);
+        return Cupom.gerar(resgate);
+    }
+
+    @Override
+    public Perfil getPerfil() { return Perfil.ALUNO; }
+
+    @Override
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
     public String getCpf() { return cpf; }

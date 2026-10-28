@@ -1,5 +1,8 @@
 backend/target/
 backend/data/
+backend/uploads/
+frontend/node_modules/
+frontend/dist/
 *.iml
 .idea/
 .vscode/

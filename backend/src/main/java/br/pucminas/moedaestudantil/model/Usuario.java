@@ -1,6 +1,7 @@
 package br.pucminas.moedaestudantil.model;
 
 import jakarta.persistence.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "usuario")
@@ -20,6 +21,15 @@ public abstract class Usuario {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    /** Confere a senha informada com o hash armazenado. */
+    public boolean autenticar(String senhaInformada, PasswordEncoder encoder) {
+        return senhaInformada != null && encoder.matches(senhaInformada, senha);
+    }
+
+    public abstract String getNome();
+
+    public abstract Perfil getPerfil();
 
     public Long getId() { return id; }
     public String getLogin() { return login; }

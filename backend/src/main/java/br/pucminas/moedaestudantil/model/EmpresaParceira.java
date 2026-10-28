@@ -24,6 +24,10 @@ public class EmpresaParceira extends Usuario {
         vantagens.add(vantagem);
     }
 
+    @Override
+    public Perfil getPerfil() { return Perfil.EMPRESA; }
+
+    @Override
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
     public String getCnpj() { return cnpj; }

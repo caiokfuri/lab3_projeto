@@ -10,6 +10,9 @@ public class Vantagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
+    private String nome;
+
     @Column(nullable = false, length = 500)
     private String descricao;
 
@@ -24,6 +27,8 @@ public class Vantagem {
     private EmpresaParceira empresa;
 
     public Long getId() { return id; }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
     public String getFotoUrl() { return fotoUrl; }

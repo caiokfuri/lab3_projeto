@@ -2,13 +2,16 @@ package br.pucminas.moedaestudantil.service;
 
 import br.pucminas.moedaestudantil.dao.AlunoDAO;
 import br.pucminas.moedaestudantil.dao.InstituicaoDAO;
+import br.pucminas.moedaestudantil.dao.ProfessorDAO;
 import br.pucminas.moedaestudantil.dao.TransacaoDAO;
 import br.pucminas.moedaestudantil.dto.AlunoRequest;
 import br.pucminas.moedaestudantil.dto.AlunoResponse;
+import br.pucminas.moedaestudantil.dto.AlunoResumoResponse;
 import br.pucminas.moedaestudantil.exception.RecursoNaoEncontradoException;
 import br.pucminas.moedaestudantil.exception.RegraNegocioException;
 import br.pucminas.moedaestudantil.model.Aluno;
 import br.pucminas.moedaestudantil.model.InstituicaoEnsino;
+import br.pucminas.moedaestudantil.model.Professor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,20 +23,28 @@ public class AlunoService {
 
     private final AlunoDAO alunoDAO;
     private final InstituicaoDAO instituicaoDAO;
+    private final ProfessorDAO professorDAO;
     private final TransacaoDAO transacaoDAO;
     private final UsuarioService usuarioService;
+    private final AuthService authService;
 
-    public AlunoService(AlunoDAO alunoDAO, InstituicaoDAO instituicaoDAO, TransacaoDAO transacaoDAO,
-                        UsuarioService usuarioService) {
+    public AlunoService(AlunoDAO alunoDAO, InstituicaoDAO instituicaoDAO, ProfessorDAO professorDAO,
+                        TransacaoDAO transacaoDAO, UsuarioService usuarioService, AuthService authService) {
         this.alunoDAO = alunoDAO;
         this.instituicaoDAO = instituicaoDAO;
+        this.professorDAO = professorDAO;
         this.transacaoDAO = transacaoDAO;
         this.usuarioService = usuarioService;
+        this.authService = authService;
     }
 
+    /** Alunos que o professor pode reconhecer: os da mesma instituição. */
     @Transactional(readOnly = true)
-    public List<AlunoResponse> listar() {
-        return alunoDAO.findAllByOrderByNomeAsc().stream().map(AlunoResponse::from).toList();
+    public List<AlunoResumoResponse> listarDaInstituicaoDoProfessor(Long professorId) {
+        Professor professor = professorDAO.findById(professorId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Professor", professorId));
+        return alunoDAO.findByInstituicaoIdOrderByNomeAsc(professor.getInstituicao().getId()).stream()
+                .map(AlunoResumoResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
@@ -63,6 +74,7 @@ public class AlunoService {
                     "Aluno possui transações registradas e não pode ser removido");
         }
         alunoDAO.delete(aluno);
+        authService.encerrarSessoes(id);
     }
 
     private void preencher(Aluno aluno, AlunoRequest dados) {
