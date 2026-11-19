@@ -1,0 +1,31 @@
+# Blueprint da Render: API Spring Boot (Docker) + PostgreSQL, ambos no plano gratuito.
+# Na Render: New > Blueprint > escolha este repositório. Passo a passo em docs/Implantacao.md.
+services:
+  - type: web
+    name: moeda-estudantil-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/instituicoes
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: moeda-estudantil-db
+          property: connectionString
+      # E-mail real (opcional): a Render gratuita bloqueia SMTP, então o envio usa a API da Brevo.
+      # Em branco, os e-mails só aparecem no log do serviço.
+      - key: APP_EMAIL_BREVO_API_KEY
+        sync: false
+      - key: APP_EMAIL_REMETENTE
+        sync: false
+
+databases:
+  - name: moeda-estudantil-db
+    plan: free
+    region: oregon
+    databaseName: moeda_estudantil
+    user: moeda

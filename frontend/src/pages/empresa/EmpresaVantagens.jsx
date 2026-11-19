@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiError } from '../../api';
+import { api, ApiError, urlDaApi } from '../../api';
 import { useAuth } from '../../auth/AuthContext';
 import { Campo, Mensagem, useFormulario, useMensagem } from '../../components/Formulario';
 import { formatarMoedas } from '../../formatar';
@@ -34,7 +34,7 @@ export default function EmpresaVantagens() {
   function escolherFoto(evento) {
     const arquivo = evento.target.files[0] ?? null;
     setFoto(arquivo);
-    setPrevia(arquivo ? URL.createObjectURL(arquivo) : editando?.fotoUrl ?? null);
+    setPrevia(arquivo ? URL.createObjectURL(arquivo) : urlDaApi(editando?.fotoUrl));
     setErros((e) => ({ ...e, foto: undefined }));
   }
 
@@ -52,7 +52,7 @@ export default function EmpresaVantagens() {
     setValores({ nome: vantagem.nome, descricao: vantagem.descricao, custoMoedas: String(vantagem.custoMoedas) });
     setErros({});
     setFoto(null);
-    setPrevia(vantagem.fotoUrl);
+    setPrevia(urlDaApi(vantagem.fotoUrl));
     if (inputFoto.current) inputFoto.current.value = '';
     formulario.current?.scrollIntoView({ behavior: 'smooth' });
   }
@@ -140,7 +140,9 @@ export default function EmpresaVantagens() {
         <div className="grade-vantagens">
           {vantagens?.map((v) => (
             <article key={v.id} className="vantagem">
-              <img src={v.fotoUrl} alt={v.nome} loading="lazy" />
+              {v.fotoUrl
+                ? <img src={urlDaApi(v.fotoUrl)} alt={v.nome} loading="lazy" />
+                : <div className="sem-foto">Sem foto</div>}
               <div className="vantagem-corpo">
                 <h3>{v.nome}</h3>
                 <p>{v.descricao}</p>

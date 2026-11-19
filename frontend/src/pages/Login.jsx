@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { AvisoServidorIniciando, useDemorando } from '../components/Carregando';
 import { Campo } from '../components/Formulario';
 import { PAGINA_INICIAL } from '../formatar';
 
@@ -12,6 +13,7 @@ export default function Login() {
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(null);
   const [entrando, setEntrando] = useState(false);
+  const demorando = useDemorando(entrando);
 
   if (usuario) return <Navigate to={PAGINA_INICIAL[usuario.perfil]} replace />;
 
@@ -60,6 +62,7 @@ export default function Login() {
                 {entrando ? 'Entrando...' : 'Entrar'}
               </button>
             </div>
+            {demorando && <AvisoServidorIniciando />}
           </form>
         </section>
 

@@ -31,8 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:moeda;DB_CLOSE_DELAY=-1",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "app.uploads.dir=target/test-uploads"
+        "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class MoedaIntegrationTest {
 
@@ -94,7 +93,7 @@ class MoedaIntegrationTest {
                         .param("custoMoedas", String.valueOf(custo))
                         .header("Authorization", authEmpresa))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.fotoUrl").value(startsWith("/uploads/")))
+                .andExpect(jsonPath("$.fotoUrl").value(startsWith("/api/fotos/")))
                 .andReturn().getResponse().getContentAsString();
         return json.readTree(corpo).get("id").asLong();
     }
@@ -202,6 +201,15 @@ class MoedaIntegrationTest {
         String cantina = token("cantina", "segredo123");
         String papelaria = token("papelaria", "segredo123");
         long vantagemId = cadastrarVantagem(cantina, "Café", 20);
+        String fotoOriginal = json.readTree(mvc.perform(get("/api/vantagens/" + vantagemId).header("Authorization", cantina))
+                .andReturn().getResponse().getContentAsString()).get("fotoUrl").asText();
+
+        // a foto é pública (carregada por <img>, sem token) e vem do banco
+        mvc.perform(get(fotoOriginal))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"))
+                .andExpect(content().bytes(PNG))
+                .andExpect(header().string("Cache-Control", containsString("immutable")));
 
         // edição sem foto mantém a atual
         mvc.perform(multipart("/api/vantagens/" + vantagemId)
@@ -210,7 +218,25 @@ class MoedaIntegrationTest {
                         .header("Authorization", cantina))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Café expresso"))
-                .andExpect(jsonPath("$.fotoUrl").value(startsWith("/uploads/")));
+                .andExpect(jsonPath("$.fotoUrl").value(fotoOriginal));
+
+        // edição com foto nova troca a URL e apaga a anterior
+        mvc.perform(multipart("/api/vantagens/" + vantagemId)
+                        .file(new MockMultipartFile("foto", "nova.png", "image/png", PNG))
+                        .param("nome", "Café expresso").param("descricao", "Um café").param("custoMoedas", "25")
+                        .with(r -> { r.setMethod("PUT"); return r; })
+                        .header("Authorization", cantina))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fotoUrl").value(allOf(startsWith("/api/fotos/"), not(fotoOriginal))));
+        mvc.perform(get(fotoOriginal)).andExpect(status().isNotFound());
+
+        // arquivo que não é imagem é recusado
+        mvc.perform(multipart("/api/vantagens")
+                        .file(new MockMultipartFile("foto", "virus.exe", "application/octet-stream", PNG))
+                        .param("nome", "X").param("descricao", "Y").param("custoMoedas", "5")
+                        .header("Authorization", cantina))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.campos.foto").exists());
 
         mvc.perform(delete("/api/vantagens/" + vantagemId).header("Authorization", papelaria))
                 .andExpect(status().isForbidden());

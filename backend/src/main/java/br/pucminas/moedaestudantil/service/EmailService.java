@@ -15,13 +15,16 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.client.RestClientException;
 
 import java.time.format.DateTimeFormatter;
 
 /**
  * Notificações por e-mail. As mensagens são montadas dentro da transação (com os dados já carregados)
- * e enviadas só depois do commit, para que uma operação desfeita não gere e-mail e uma falha de SMTP
- * não desfaça a operação. Sem {@code spring.mail.host} configurado, o envio é simulado no log.
+ * e enviadas só depois do commit, para que uma operação desfeita não gere e-mail e uma falha no envio
+ * não desfaça a operação.
+ * <p>Canal de envio, nesta ordem: API HTTP da Brevo (nuvem), SMTP ({@code spring.mail.host}) ou,
+ * sem nenhum configurado, simulação no log.
  */
 @Service
 public class EmailService {
@@ -29,10 +32,13 @@ public class EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    private final BrevoEmailClient brevo;
     private final ObjectProvider<JavaMailSender> mailSender;
     private final String remetente;
 
-    public EmailService(ObjectProvider<JavaMailSender> mailSender, @Value("${app.email.remetente}") String remetente) {
+    public EmailService(BrevoEmailClient brevo, ObjectProvider<JavaMailSender> mailSender,
+                        @Value("${app.email.remetente}") String remetente) {
+        this.brevo = brevo;
         this.mailSender = mailSender;
         this.remetente = remetente;
     }
@@ -111,6 +117,16 @@ public class EmailService {
     }
 
     private void despachar(SimpleMailMessage mensagem) {
+        if (brevo.configurado()) {
+            try {
+                brevo.enviar(remetente, mensagem.getTo()[0], mensagem.getSubject(), mensagem.getText());
+                log.info("E-mail enviado (Brevo) para {}: {}", mensagem.getTo()[0], mensagem.getSubject());
+            } catch (RestClientException e) {
+                log.warn("Falha ao enviar e-mail (Brevo) para {}: {}", mensagem.getTo()[0], e.getMessage());
+            }
+            return;
+        }
+
         JavaMailSender sender = mailSender.getIfAvailable();
         if (sender == null) {
             log.info("[e-mail simulado] Para: {} | Assunto: {}\n{}",

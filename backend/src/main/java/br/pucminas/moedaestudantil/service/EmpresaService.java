@@ -7,7 +7,6 @@ import br.pucminas.moedaestudantil.dto.EmpresaResponse;
 import br.pucminas.moedaestudantil.exception.RecursoNaoEncontradoException;
 import br.pucminas.moedaestudantil.exception.RegraNegocioException;
 import br.pucminas.moedaestudantil.model.EmpresaParceira;
-import br.pucminas.moedaestudantil.model.Vantagem;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +20,13 @@ public class EmpresaService {
     private final TransacaoDAO transacaoDAO;
     private final UsuarioService usuarioService;
     private final AuthService authService;
-    private final ArmazenamentoFotoService fotos;
 
     public EmpresaService(EmpresaDAO empresaDAO, TransacaoDAO transacaoDAO, UsuarioService usuarioService,
-                          AuthService authService, ArmazenamentoFotoService fotos) {
+                          AuthService authService) {
         this.empresaDAO = empresaDAO;
         this.transacaoDAO = transacaoDAO;
         this.usuarioService = usuarioService;
         this.authService = authService;
-        this.fotos = fotos;
     }
 
     @Transactional(readOnly = true)
@@ -63,9 +60,7 @@ public class EmpresaService {
             throw new RegraNegocioException(HttpStatus.CONFLICT,
                     "Empresa possui vantagens já resgatadas e não pode ser removida");
         }
-        List<String> fotosDasVantagens = empresa.getVantagens().stream().map(Vantagem::getFotoUrl).toList();
-        empresaDAO.delete(empresa);
-        fotosDasVantagens.forEach(fotos::remover);
+        empresaDAO.delete(empresa); // vantagens e fotos são removidas em cascata
         authService.encerrarSessoes(id);
     }
 

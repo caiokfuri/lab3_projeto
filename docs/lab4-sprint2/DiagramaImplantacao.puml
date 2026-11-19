@@ -1,0 +1,45 @@
+@startuml DiagramaImplantacao
+' Diagrama de Implantação — Sistema de Moeda Estudantil (Lab04S02)
+' Fonte editável do DiagramaImplantacao.svg. Para renderizar: extensão "PlantUML" do VS Code
+' ou https://www.plantuml.com/plantuml (cole este conteúdo).
+
+title Diagrama de Implantação — Sistema de Moeda Estudantil (Lab04S02)
+skinparam defaultFontName Arial
+left to right direction
+
+node "Computador ou celular do usuário" <<device>> as usuario {
+  node "Navegador web" <<execution environment>> as navegador {
+    artifact "SPA React\n--\nindex.html · assets/*.js · assets/*.css\ntoken de sessão no localStorage" as spa
+  }
+}
+
+node "Vercel — Edge Network (CDN)\nplano Hobby (gratuito)" <<node>> as vercel {
+  artifact "frontend/dist\n--\nbuild do Vite (npm run build)\nvercel.json: rotas do React → index.html\nVITE_API_URL = endereço da API na Render" as dist
+}
+
+node "GitHub" <<node>> as github {
+  artifact "repositório lab3_projeto\n--\nbranch main\nrender.yaml · backend/Dockerfile\nfrontend/vercel.json" as repo
+}
+
+node "Render — Web Service\nplano free · 512 MB · região Oregon" <<node>> as render {
+  node "Contêiner Docker (eclipse-temurin:25-jre)" <<execution environment>> as container {
+    node "JVM Java 25" <<execution environment>> as jvm {
+      artifact "moeda-estudantil.jar\n--\nSpring Boot 3.5 · API REST /api/** na porta $PORT\nMVC: Controller → Service → DAO (JPA/Hibernate)\nSPRING_PROFILES_ACTIVE=prod · DATABASE_URL" as jar
+    }
+  }
+}
+
+node "Render — PostgreSQL\nplano free · 1 GB" <<node>> as postgres {
+  database "moeda_estudantil\n--\ntabelas do Modelo ER" <<database>> as banco
+}
+
+node "Brevo — API de e-mail\nserviço externo (opcional)" <<node>> as brevo
+
+usuario -- vercel : <<HTTPS>>\nbaixa a SPA
+usuario -- render : <<HTTPS>>\nAPI REST (JSON + token Bearer)
+render -- postgres : <<TCP/JDBC>>\nrede interna
+render -- brevo : <<HTTPS>>\nenvio de e-mail
+github ..> vercel : <<deploy>>\npush
+github ..> render : <<deploy>>\nbuild da imagem Docker a cada push
+
+@enduml

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../../api';
+import { api, urlDaApi } from '../../api';
 import { Mensagem, Modal, useMensagem } from '../../components/Formulario';
 import Saldo from '../../components/Saldo';
 import useExtrato from '../../components/useExtrato';
@@ -62,7 +62,9 @@ export default function AlunoVantagens() {
           const falta = v.custoMoedas - saldo;
           return (
             <article key={v.id} className="vantagem">
-              <img src={v.fotoUrl} alt={v.nome} loading="lazy" />
+              {v.fotoUrl
+                ? <img src={urlDaApi(v.fotoUrl)} alt={v.nome} loading="lazy" />
+                : <div className="sem-foto">Sem foto</div>}
               <div className="vantagem-corpo">
                 <span className="texto-suave">{v.empresaNome}</span>
                 <h3>{v.nome}</h3>

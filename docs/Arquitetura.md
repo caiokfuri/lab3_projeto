@@ -1,9 +1,20 @@
-# Arquitetura e modelos — versão 2 (Lab03S03)
+# Arquitetura e modelos — versão 3 (Lab04S02)
 
 Os PDFs em `docs/` são a **versão 1** dos modelos (Lab03S01) e foram mantidos como histórico. Este documento
-traz a **versão 2**, atualizada conforme a implementação final, e lista o que mudou.
+traz a versão atual dos diagramas de classes e componentes, atualizada conforme a implementação, e lista o que
+mudou em cada versão. A implantação na nuvem e o Diagrama de Implantação estão em [Implantacao.md](Implantacao.md).
 
-## O que mudou da v1 para a v2
+## O que mudou da v2 para a v3 (Lab04S02 — implantação na nuvem)
+
+| Modelo | Alteração | Motivo |
+|---|---|---|
+| Classes / ER | Nova entidade `Foto` (tabela `foto`); `Vantagem` passa a ter `foto` (0..1, composição) e `getFotoUrl()` derivado | O disco da Render é apagado a cada reinício; as imagens precisam ficar no banco |
+| Componentes | `FotoController` (`GET /api/fotos/{id}`, público), `FotoService` e `FotoDAO` substituem `ArmazenamentoFotoService` e a pasta `uploads/` | Mesmo motivo |
+| Componentes | `BrevoEmailClient` usado pelo `EmailService` | A Render gratuita bloqueia SMTP; o envio na nuvem é por API HTTP |
+| Componentes | `DatabaseUrlEnvironmentPostProcessor` | Converte a `DATABASE_URL` do provedor para a configuração JDBC do PostgreSQL |
+| Componentes | Banco: H2 (local) ou PostgreSQL (nuvem); View na Vercel e API na Render | Implantação descrita no Diagrama de Implantação |
+
+## O que mudou da v1 para a v2 (Lab03S03)
 
 | Modelo | Alteração | Motivo |
 |---|---|---|
@@ -15,7 +26,7 @@ traz a **versão 2**, atualizada conforme a implementação final, e lista o que
 | Componentes | View em **React** (SPA) no lugar de HTML/JS puro | Pedido da equipe para a Sprint 3 |
 | Componentes | `ProfessorService`, `VantagemService`, `ArmazenamentoFotoService`, `AutenticacaoInterceptor` | Crédito semestral, CRUD de vantagens, upload de fotos e proteção da API |
 
-## Diagrama de classes (v2)
+## Diagrama de classes (v3)
 
 ```mermaid
 classDiagram
@@ -68,8 +79,13 @@ classDiagram
         -Long id
         -String nome
         -String descricao
-        -String fotoUrl
         -int custoMoedas
+        +getFotoUrl() String
+    }
+    class Foto {
+        -Long id
+        -String tipoConteudo
+        -byte[] conteudo
     }
     class Transacao {
         <<abstract>>
@@ -103,6 +119,7 @@ classDiagram
     InstituicaoEnsino "1" o-- "*" Aluno : estuda em
     InstituicaoEnsino "1" o-- "*" Professor : vinculado a
     EmpresaParceira "1" *-- "*" Vantagem : oferece
+    Vantagem "1" *-- "0..1" Foto : tem
     Professor "1" --> "*" TransacaoEnvio : realiza
     Aluno "1" --> "*" Transacao : recebe / realiza
     TransacaoResgate "*" --> "1" Vantagem : refere-se a
@@ -111,19 +128,19 @@ classDiagram
     EmailService ..> Cupom : usa
 ```
 
-## Diagrama de componentes (v2)
+## Diagrama de componentes (v3)
 
 ```mermaid
 flowchart TB
     nav["Navegador"]
-    subgraph View["View — React (frontend/src)"]
+    subgraph View["View — React (frontend/src) · hospedada na Vercel"]
         direction LR
         tl["Login e cadastros<br/>pages/Login, CadastroAluno, CadastroEmpresa"]
         ta["Telas do Aluno<br/>pages/aluno/*"]
         tp["Telas do Professor<br/>pages/professor/*"]
         te["Telas da Empresa<br/>pages/empresa/*"]
     end
-    subgraph Controller["Controller — REST (controller)"]
+    subgraph Controller["Controller — REST (controller) · API na Render"]
         direction LR
         ai["AutenticacaoInterceptor"]
         c1["AuthController"]
@@ -132,6 +149,7 @@ flowchart TB
         c4["EmpresaController"]
         c5["VantagemController"]
         c6["TransacaoController"]
+        c7["FotoController"]
     end
     subgraph Servicos["Model — Serviços (service)"]
         direction LR
@@ -140,31 +158,34 @@ flowchart TB
         s3["ProfessorService<br/>(crédito semestral agendado)"]
         s4["MoedaService"]
         s5["VantagemService"]
-        s6["ArmazenamentoFotoService"]
+        s6["FotoService"]
         s7["EmailService"]
+        s8["BrevoEmailClient"]
     end
     subgraph Persistencia["Model — Persistência (dao + model)"]
         direction LR
-        d["AlunoDAO · ProfessorDAO · EmpresaDAO · UsuarioDAO<br/>VantagemDAO · TransacaoDAO · InstituicaoDAO<br/>(Spring Data JPA / Hibernate)"]
+        d["AlunoDAO · ProfessorDAO · EmpresaDAO · UsuarioDAO<br/>VantagemDAO · TransacaoDAO · InstituicaoDAO · FotoDAO<br/>(Spring Data JPA / Hibernate)"]
     end
-    db[("Banco H2")]
-    smtp["Servidor SMTP"]
-    disco[("uploads/ (fotos)")]
+    db[("H2 (local) ou<br/>PostgreSQL (nuvem)")]
+    smtp["Servidor SMTP<br/>(execução local)"]
+    brevo["API da Brevo<br/>(nuvem)"]
 
-    nav -->|HTTP| View
+    nav -->|HTTPS| View
     View -->|"fetch JSON + Bearer token"| Controller
     Controller --> Servicos
     Servicos --> Persistencia
     Persistencia -->|SQL| db
     s7 -->|e-mail| smtp
-    s6 --> disco
+    s7 --> s8
+    s8 -->|HTTPS| brevo
 ```
 
 ## Autenticação
 
 1. `POST /api/auth/login` confere login e senha (`Usuario.autenticar`, BCrypt) e devolve um token aleatório.
 2. O React guarda o token e o envia em `Authorization: Bearer <token>` em toda requisição.
-3. `AutenticacaoInterceptor` valida o token em `/api/**` (exceto login, auto-cadastro e lista de instituições) e
+3. `AutenticacaoInterceptor` valida o token em `/api/**` (exceto login, auto-cadastro, lista de instituições e
+   fotos, que a tag `<img>` carrega sem o cabeçalho) e
    coloca o `UsuarioLogado` na requisição; os controllers verificam o perfil e se o recurso é do próprio usuário
    (401 sem login, 403 sem permissão).
 4. As sessões ficam em memória e expiram em 8 h (`app.auth.validade-horas`).
@@ -187,6 +208,7 @@ flowchart TB
 | GET | `/api/vantagens[?empresaId=]` | logado | Catálogo de vantagens |
 | POST / PUT | `/api/vantagens[/{id}]` | empresa dona | multipart: `nome`, `descricao`, `custoMoedas`, `foto` |
 | DELETE | `/api/vantagens/{id}` | empresa dona | Remove (se nunca resgatada) |
+| GET | `/api/fotos/{id}` | público | Imagem da vantagem (guardada no banco; cache de 1 ano) |
 | POST | `/api/transacoes/envios` | professor | `{ alunoId, valor, motivo }` |
 | POST | `/api/transacoes/resgates` | aluno | `{ vantagemId }` → transação com `cupomCodigo` |
 | GET | `/api/transacoes/extrato` | aluno / professor | Saldo e transações |

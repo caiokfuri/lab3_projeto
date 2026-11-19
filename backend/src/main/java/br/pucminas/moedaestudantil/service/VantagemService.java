@@ -23,14 +23,14 @@ public class VantagemService {
     private final VantagemDAO vantagemDAO;
     private final EmpresaDAO empresaDAO;
     private final TransacaoDAO transacaoDAO;
-    private final ArmazenamentoFotoService fotos;
+    private final FotoService fotoService;
 
     public VantagemService(VantagemDAO vantagemDAO, EmpresaDAO empresaDAO, TransacaoDAO transacaoDAO,
-                           ArmazenamentoFotoService fotos) {
+                           FotoService fotoService) {
         this.vantagemDAO = vantagemDAO;
         this.empresaDAO = empresaDAO;
         this.transacaoDAO = transacaoDAO;
-        this.fotos = fotos;
+        this.fotoService = fotoService;
     }
 
     @Transactional(readOnly = true)
@@ -57,22 +57,20 @@ public class VantagemService {
 
         Vantagem vantagem = new Vantagem();
         preencher(vantagem, dados);
-        vantagem.setFotoUrl(fotos.salvar(foto));
+        vantagem.setFoto(fotoService.criar(foto));
         empresa.cadastrarVantagem(vantagem);
         return VantagemResponse.from(vantagemDAO.save(vantagem));
     }
 
-    /** A foto é opcional na edição: sem arquivo, mantém a atual. */
+    /** A foto é opcional na edição: sem arquivo, mantém a atual; com arquivo, a anterior é apagada. */
     @Transactional
     public VantagemResponse atualizar(Long empresaId, Long id, VantagemRequest dados, MultipartFile foto) {
         Vantagem vantagem = buscarDaEmpresa(empresaId, id);
         preencher(vantagem, dados);
         if (foto != null && !foto.isEmpty()) {
-            String antiga = vantagem.getFotoUrl();
-            vantagem.setFotoUrl(fotos.salvar(foto));
-            fotos.remover(antiga);
+            vantagem.setFoto(fotoService.criar(foto));
         }
-        return VantagemResponse.from(vantagem);
+        return VantagemResponse.from(vantagemDAO.saveAndFlush(vantagem));
     }
 
     @Transactional
@@ -84,7 +82,6 @@ public class VantagemService {
         }
         vantagem.getEmpresa().getVantagens().remove(vantagem);
         vantagemDAO.delete(vantagem);
-        fotos.remover(vantagem.getFotoUrl());
     }
 
     private void preencher(Vantagem vantagem, VantagemRequest dados) {

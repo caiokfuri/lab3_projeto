@@ -6,3 +6,6 @@ frontend/dist/
 *.iml
 .idea/
 .vscode/
+frontend/.env.local
+frontend/.vercel/
+.vercel/

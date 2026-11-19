@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Exige um token válido em toda a API, exceto login, auto-cadastro de aluno/empresa e a lista de
- * instituições (usada no cadastro). O usuário resolvido fica no atributo {@link #USUARIO_LOGADO}
+ * Exige um token válido em toda a API, exceto login, auto-cadastro de aluno/empresa, a lista de
+ * instituições (usada no cadastro) e as fotos das vantagens. O usuário resolvido fica no atributo {@link #USUARIO_LOGADO}
  * da requisição, lido pelos controllers com {@code @RequestAttribute}.
  */
 @Component
@@ -51,7 +51,8 @@ public class AutenticacaoInterceptor implements HandlerInterceptor {
         return switch (metodo) {
             case "POST" -> caminho.equals("/api/auth/login") || caminho.equals("/api/alunos")
                     || caminho.equals("/api/empresas");
-            case "GET" -> caminho.equals("/api/instituicoes");
+            // fotos: carregadas por <img>, que não envia o cabeçalho Authorization
+            case "GET" -> caminho.equals("/api/instituicoes") || caminho.startsWith("/api/fotos/");
             default -> false;
         };
     }

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
+import Carregando from './components/Carregando';
 import RotaPrivada from './components/RotaPrivada';
 import { PAGINA_INICIAL } from './formatar';
 import Login from './pages/Login';
@@ -17,7 +18,7 @@ import EmpresaPerfil from './pages/empresa/EmpresaPerfil';
 
 function Inicio() {
   const { usuario, carregando } = useAuth();
-  if (carregando) return <p className="carregando">Carregando...</p>;
+  if (carregando) return <Carregando />;
   return <Navigate to={usuario ? PAGINA_INICIAL[usuario.perfil] : '/login'} replace />;
 }
 

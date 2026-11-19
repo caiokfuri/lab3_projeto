@@ -1,7 +1,8 @@
 # Modelo ER e Estratégia de Persistência
 
-> Atualizado no Lab03S03: colunas `vantagem.nome` e `professor.ultimo_semestre_creditado`
-> (ver [Arquitetura.md](Arquitetura.md) para o histórico de mudanças dos modelos).
+> Atualizado no Lab03S03: colunas `vantagem.nome` e `professor.ultimo_semestre_creditado`.
+> Atualizado no Lab04S02: tabela `foto` (imagens das vantagens no banco, para a implantação na nuvem) no lugar
+> da coluna `vantagem.foto_url`. Histórico das mudanças em [Arquitetura.md](Arquitetura.md).
 
 ## Modelo Entidade-Relacionamento
 
@@ -13,6 +14,7 @@ erDiagram
     USUARIO ||--o| PROFESSOR : "é"
     USUARIO ||--o| EMPRESA_PARCEIRA : "é"
     EMPRESA_PARCEIRA ||--o{ VANTAGEM : "oferece"
+    VANTAGEM |o--o| FOTO : "tem"
     PROFESSOR ||--o{ TRANSACAO : "realiza (envio)"
     ALUNO ||--o{ TRANSACAO : "recebe / realiza (resgate)"
     VANTAGEM ||--o{ TRANSACAO : "refere-se a (resgate)"
@@ -56,9 +58,14 @@ erDiagram
         bigint id PK
         varchar nome
         varchar descricao
-        varchar foto_url "/uploads/<arquivo>"
+        bigint foto_id FK, UK
         int custo_moedas
         bigint empresa_id FK
+    }
+    FOTO {
+        bigint id PK
+        varchar tipo_conteudo "image/png, image/jpeg..."
+        bytea conteudo "até 5 MB"
     }
     TRANSACAO {
         bigint id PK
@@ -104,5 +111,10 @@ View (React)  --HTTP/JSON-->  Controller  -->  Service  -->  DAO  -->  ORM (JPA/
   login/e-mail/CPF/CNPJ, hash de senha (BCrypt), conversão entidade ↔ DTO.
 - **Controllers** REST recebem/devolvem DTOs (`record`s), nunca as entidades, para não expor a senha
   e desacoplar a API do esquema.
-- **Banco**: H2 em arquivo (`backend/data/`) no desenvolvimento, sem instalação. Para trocar por
-  PostgreSQL/MySQL basta adicionar o driver e mudar `spring.datasource.*` em `application.properties`.
+- **Banco**: H2 em arquivo (`backend/data/`) no desenvolvimento, sem instalação; **PostgreSQL** na nuvem
+  (Render). A troca não exige mudança de código: quando a variável `DATABASE_URL` existe, ela é convertida em
+  `spring.datasource.*` por `config/DatabaseUrlEnvironmentPostProcessor` e o Hibernate cria o esquema no
+  PostgreSQL. Ver [Implantacao.md](Implantacao.md).
+- **Fotos no banco**: as imagens das vantagens ficam na tabela `foto` (`bytea` no PostgreSQL), carregada de forma
+  preguiçosa (`LAZY`) para não trazer os bytes ao listar vantagens. O disco do servidor na nuvem é temporário,
+  então arquivos enviados não podem ficar em uma pasta.

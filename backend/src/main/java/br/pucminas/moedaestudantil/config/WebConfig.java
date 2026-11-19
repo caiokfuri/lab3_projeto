@@ -1,6 +1,5 @@
 package br.pucminas.moedaestudantil.config;
 
-import br.pucminas.moedaestudantil.service.ArmazenamentoFotoService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
@@ -17,14 +16,15 @@ import java.io.IOException;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AutenticacaoInterceptor autenticacaoInterceptor;
-    private final ArmazenamentoFotoService fotos;
     private final String frontendDir;
+    private final String[] origensPermitidas;
 
-    public WebConfig(AutenticacaoInterceptor autenticacaoInterceptor, ArmazenamentoFotoService fotos,
-                     @Value("${app.frontend.dir}") String frontendDir) {
+    public WebConfig(AutenticacaoInterceptor autenticacaoInterceptor,
+                     @Value("${app.frontend.dir}") String frontendDir,
+                     @Value("${app.cors.origens}") String[] origensPermitidas) {
         this.autenticacaoInterceptor = autenticacaoInterceptor;
-        this.fotos = fotos;
         this.frontendDir = frontendDir.endsWith("/") ? frontendDir : frontendDir + "/";
+        this.origensPermitidas = origensPermitidas;
     }
 
     @Override
@@ -32,11 +32,14 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(autenticacaoInterceptor).addPathPatterns("/api/**");
     }
 
-    /** Permite rodar o front-end pelo servidor de desenvolvimento do Vite chamando a API na 8080. */
+    /**
+     * Front-end em outra origem: o Vite em desenvolvimento (localhost:5173) e a Vercel em produção.
+     * A autenticação é por token no cabeçalho (não por cookie), então liberar a origem não expõe a sessão.
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*")
+                .allowedOriginPatterns(origensPermitidas)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE");
     }
 
@@ -46,13 +49,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/").setViewName("forward:/index.html");
     }
 
+    /**
+     * Execução local: o próprio Spring serve o build do React. Rotas do front-end que não são arquivos
+     * devolvem o index.html, para que o React Router trate a URL (ex.: recarregar em /aluno/extrato).
+     */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler(ArmazenamentoFotoService.PREFIXO_URL + "**")
-                .addResourceLocations(fotos.getDiretorio().toUri().toString());
-
-        // Build do React (SPA): rotas do front-end que não são arquivos devolvem o index.html,
-        // para que o React Router trate a URL (ex.: recarregar a página em /aluno/extrato).
         registry.addResourceHandler("/**")
                 .addResourceLocations("file:" + frontendDir)
                 .resourceChain(true)

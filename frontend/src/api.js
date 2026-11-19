@@ -1,5 +1,14 @@
 // Comunicação com o back-end (API REST). O token de sessão vai no cabeçalho Authorization.
 
+// Local: vazio (mesma origem ou proxy do Vite). Na Vercel: endereço da API na Render, ex.
+// VITE_API_URL=https://moeda-estudantil-api.onrender.com (definido no build).
+export const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
+/** Endereço absoluto de um caminho da API, para usar fora do fetch (ex.: <img src>). */
+export function urlDaApi(caminho) {
+  return caminho ? `${API_URL}${caminho}` : null;
+}
+
 const CHAVE_TOKEN = 'moeda-estudantil.token';
 
 export class ApiError extends Error {
@@ -44,7 +53,7 @@ async function requisicao(metodo, url, corpo) {
 
   let resposta;
   try {
-    resposta = await fetch(url, { method: metodo, headers, body });
+    resposta = await fetch(API_URL + url, { method: metodo, headers, body });
   } catch {
     throw new ApiError(0, 'Não foi possível conectar ao servidor');
   }

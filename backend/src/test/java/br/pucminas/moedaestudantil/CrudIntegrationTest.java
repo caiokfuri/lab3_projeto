@@ -23,8 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:teste;DB_CLOSE_DELAY=-1",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "app.uploads.dir=target/test-uploads"
+        "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class CrudIntegrationTest {
 

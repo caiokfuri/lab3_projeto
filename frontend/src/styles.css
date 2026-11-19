@@ -293,3 +293,18 @@ td.quebra { white-space: normal; min-width: 220px; }
     .saldo-extra { margin-left: 0; }
     .empurra-direita { margin-left: 0; }
 }
+
+/* ---------- nuvem: foto ausente e aviso de servidor iniciando ---------- */
+
+.sem-foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 3;
+    background: var(--cor-fundo);
+    color: var(--cor-suave);
+    font-size: .85rem;
+}
+
+.carregando p { margin: 0; }
+.aviso-servidor { margin: 12px 0 0; color: #93600f; font-size: .875rem; }

@@ -16,8 +16,10 @@ public class Vantagem {
     @Column(nullable = false, length = 500)
     private String descricao;
 
-    @Column(name = "foto_url")
-    private String fotoUrl;
+    /** Carregada só quando a imagem é pedida; trocar a foto apaga a anterior. */
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "foto_id")
+    private Foto foto;
 
     @Column(name = "custo_moedas", nullable = false)
     private int custoMoedas;
@@ -26,13 +28,18 @@ public class Vantagem {
     @JoinColumn(name = "empresa_id", nullable = false)
     private EmpresaParceira empresa;
 
+    /** Endereço público da foto ({@code GET /api/fotos/{id}}), ou {@code null} se não houver. */
+    public String getFotoUrl() {
+        return foto == null ? null : "/api/fotos/" + foto.getId();
+    }
+
     public Long getId() { return id; }
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
     public String getDescricao() { return descricao; }
     public void setDescricao(String descricao) { this.descricao = descricao; }
-    public String getFotoUrl() { return fotoUrl; }
-    public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    public Foto getFoto() { return foto; }
+    public void setFoto(Foto foto) { this.foto = foto; }
     public int getCustoMoedas() { return custoMoedas; }
     public void setCustoMoedas(int custoMoedas) { this.custoMoedas = custoMoedas; }
     public EmpresaParceira getEmpresa() { return empresa; }
